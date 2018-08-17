@@ -182,9 +182,9 @@ tout
 nrow(tout)
 
 #specify your output file name
-filename="sst_ind_report_card_output1.csv"
+outputfilenamec1="sst_ind_report_card_output1.csv"
 
-write.table(tout,filename, quote = FALSE, dec = ".", sep=";",row.names=FALSE) 
+write.table(tout,outputfilenamec1, quote = FALSE, dec = ".", sep=";",row.names=FALSE) 
 
 
 
