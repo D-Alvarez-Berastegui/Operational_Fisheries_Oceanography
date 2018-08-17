@@ -181,8 +181,10 @@ tout
 
 nrow(tout)
 
+#specify your output file name
+filename="sst_ind_report_card_output1.csv"
 
-write.table(tout,paste(getwd(),"/","Copernicus_SST_reanalisis.csv",sep=""), quote = FALSE, dec = ".", sep=";",row.names=FALSE) 
+write.table(tout,filename, quote = FALSE, dec = ".", sep=";",row.names=FALSE) 
 
 
 
