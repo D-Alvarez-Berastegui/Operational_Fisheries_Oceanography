@@ -5,3 +5,5 @@ codes c1 to c3 are for processign a plot of mean SST from Copoernicus MFS data, 
 
 
 ![Output plot example](https://github.com/D-Alvarez-Berastegui/Operational_Fisheries_Oceanography/SST_plot_example_Balearics.png)
+
+
