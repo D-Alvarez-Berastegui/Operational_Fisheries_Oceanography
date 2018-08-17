@@ -1,9 +1,9 @@
 
 ##   2017/01/17 R FUNCTION to download one day  data from MFS temperature at specific geo area and depth. Save as NetCDF format
 # Diego Alvarez-Berastegui
-# This function for R software needs phyton MOTUclient, read intruction at: http://forum.marine.copernicus.eu/discussion/148/how-to-use-the-motu-client-with-myocean-data-resolved/p1
-
 # www.socib.es
+# This function for R software needs phyton MOTUclient, read intruction at: http://forum.marine.copernicus.eu/discussion/148/how-to-use-the-motu-client-with-myocean-data-resolved/p1
+# a Full description of the data set can be found at: http://marine.copernicus.eu/services-portfolio/access-to-products/?option=com_csw&view=details&product_id=MEDSEA_REANALYSIS_PHYS_006_004
 
 #product="MEDSEA_REANALYSIS_PHYS_006004-TDS"
 # mydate="your date of interest" 
