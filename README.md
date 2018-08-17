@@ -5,3 +5,5 @@ codes c1 to c3 are for processign a plot of mean SST from Copoernicus MFS data, 
 
 
 ![SST plot example Balearics.png]
+
+![Test Image 4](https://github.com/tograh/testrepository/3DTest.png)
