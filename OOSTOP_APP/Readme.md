@@ -19,13 +19,14 @@ Screenshot of the selection data tool
 ![alt text](https://github.com/D-Alvarez-Berastegui/Operational_Fisheries_Oceanography/blob/master/OOSTOP_APP/selection.png)
 
 
-Screenshot of the plot tool
+Screenshot of the data plot tool
 
 ![alt text](https://github.com/D-Alvarez-Berastegui/Operational_Fisheries_Oceanography/blob/master/OOSTOP_APP/plots.png)
 
 
 
 
+--------------------------------------
 To execute this software, it is neccesary internet connection and install in your computer the next open source programs:
 
 
