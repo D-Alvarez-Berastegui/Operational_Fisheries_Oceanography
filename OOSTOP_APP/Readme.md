@@ -1,13 +1,12 @@
 Readme.txt of OOSTOP data adquisition Application
-Created by Diego Álvarez Berastegui and Carlos Trenc Español
+Created by Carlos Trenc Español and Diego Álvarez Berastegui
 July-2018.
 
 A tool of the "Operational Oceanography for Sustainability and Conservation of Marine Top Predators (OOSTOP)"
 
 
-This shoftware is one of the results from the OOSTOP IMBER/CLIOTOP task team https://oostop.wixsite.com/oostop
-It facilitates accesing operational oceanography data from relevant servers. First version is focused on data from COPERNICUS.
-NExt version will include models from SOCIB (www.socib.es)
+This shoftware is one of the results from the OOSTOP IMBER/CLIOTOP task team https://oostop.wixsite.com/oostop Coordinated by SOCIB (www.socib.es). It facilitates accesing operational oceanography data from relevant servers. First version is focused on data from COPERNICUS.
+NExt version will include models from SOCIB 
 
 
 Screenshot of the wellcome page
