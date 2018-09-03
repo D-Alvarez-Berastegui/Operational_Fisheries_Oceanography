@@ -23,25 +23,4 @@ Once they are installed, to initialize, load all neccesary libraries and execute
 3. Execute server.R file in Run App mode. Default user/password is c/c.
 
 
-
-library(shinyFiles)
-library(shiny)
-library(shinyjs)
-library(iterators)
-library(markdown)
-library(stringr)
-library(lubridate)
-library(shinythemes)
-library(DT)
-library(ggplot2)
-library(reshape2)
-library(raster)
-library(ncdf4)
-library(RNetCDF)
-library(maptools)
-library(dismo)
-library(fields)
-library(jpeg)
-library(chron)
-library(RColorBrewer)
-library(lattice)
+https://github.com/D-Alvarez-Berastegui/Operational_Fisheries_Oceanography/blob/master/OOSTOP_APP/selection.png
