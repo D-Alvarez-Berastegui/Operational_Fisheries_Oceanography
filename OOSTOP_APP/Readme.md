@@ -23,4 +23,4 @@ Once they are installed, to initialize, load all neccesary libraries and execute
 3. Execute server.R file in Run App mode. Default user/password is c/c.
 
 
-https://github.com/D-Alvarez-Berastegui/Operational_Fisheries_Oceanography/blob/master/OOSTOP_APP/selection.png
+![alt text](https://github.com/D-Alvarez-Berastegui/Operational_Fisheries_Oceanography/blob/master/OOSTOP_APP/selection.png)
