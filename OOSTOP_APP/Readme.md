@@ -1,6 +1,6 @@
 Readme.txt of OOSTOP data adquisition Application
 Created by Carlos Trenc Español and Diego Álvarez Berastegui
-July-2018.
+December-2017.
 
 A tool of the "Operational Oceanography for Sustainability and Conservation of Marine Top Predators (OOSTOP)"
 
