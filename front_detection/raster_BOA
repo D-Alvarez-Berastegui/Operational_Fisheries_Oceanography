@@ -1,0 +1,230 @@
+
+#20180523 Diego Alvarez Beras tegui & Carlos Trenc
+###### Script to generate BOA-BLUEFIN products: BOA_BLUEFIN.nc and BOA_BLUEFIN.png
+
+
+# este código lee los ficheros de NETCDF de clorofila en la carpeta de entrada , confirma si el BOA de esa imagen existe ya en la carpeta de salida.
+# si la imagen BOA no existe el fichero NCDF se convierte a raster y se computa el BOA.
+# el algoritmo desarrollado es una adaptación del BOA original de Belkin and O´Reilly (2009), las modificaciones aplicadas se definieron para maximizar los resultados en el 
+# Mediterráneo, los detalles de estas modificaciones están descritas en el documento asociado C1_BOA chla western Med.pdf
+
+
+
+###Libraries
+library(ncdf4)
+library(sp)
+library(maptools)
+library(dismo)
+library(raster)
+library(fields)
+library(RNetCDF)  
+library(doParallel)
+library(foreach)
+library(tcltk)
+
+require(tcltk)
+
+###remove previous environment list
+rm(list=ls(all=TRUE))
+
+# read a shapefile coastline in degrees wgs84 (or similar) to plot maps 
+coastline <- readShapePoly("F:/AAD_2/sig_Med/ESRIDATA/WORLD/country.shp")
+
+### define functions
+
+myfunmax=function(x){ifelse(all(is.na(x))==T,NA,max(na.omit(x)))}
+myfunmin=function(x){ifelse(all(is.na(x))==T,NA,min(na.omit(x)))}
+myfunmedian=function(x){ifelse(all(is.na(x))==T,NA,median(na.omit(x)))}
+myfunmean=function(x){ifelse(all(is.na(x))==T,NA,mean(na.omit(x)))}
+
+
+
+###Define path
+outpath="F:/bluefin_repository/DIEGO/BOA-BLUEFIN_Diego/BOA/BOA_dataset/" #"Z:/TunabitRS/bluefin_prods/BOA_CHLA_v1/"
+ipath="F:/bluefin_repository/DIEGO/BOA-BLUEFIN_Diego/BLUEFIN/BLUEFIN/"   #"Z:/TunabitRS/bluefin_prods/"
+dataset="BLUEFIN_dataset/"
+productname="_BLUEFIN_chla.nc"
+
+
+
+
+###To use multiple cores simultaneously
+UseCores <- detectCores() -1
+cl       <- makeCluster(UseCores)
+registerDoParallel(cl)
+rasterOptions(maxmemory=1e+09)
+
+# genera una lista de fechas a partir de los ficheros existentes de chla blueifn
+tfilenames=list.files(paste(ipath,dataset,sep=""))
+tdates=substr(tfilenames,1,8)
+
+
+
+boamatrix_x=matrix(c(-0.083333333,	-0.081967213,	-0.076923077,	-0.066666667,	-0.050000000,	-0.027027027,	0,	0.027027027,	0.050000000,	0.066666667,	0.076923077,	0.081967213,	0.083333333,
+                               -0.098360656,	-0.100000000,	-0.097560976,	-0.088235294,	-0.068965517,	-0.038461538,	0,	0.038461538,	0.068965517,	0.088235294,	0.097560976,	0.100000000,	0.098360656,
+                               -0.115384615,	-0.121951220,	-0.125000000,	-0.120000000,	-0.100000000,	-0.058823529,	0,	0.058823529,	0.100000000,	0.120000000,	0.125000000,	0.121951220,	0.115384615,
+                               -0.133333333,	-0.147058824,	-0.160000000,	-0.166666667,	-0.153846154,	-0.100000000,	0,	0.100000000,	0.153846154,	0.166666667,	0.160000000,	0.147058824,	0.133333333,
+                               -0.150000000,	-0.172413793,	-0.200000000,	-0.230769231,	-0.250000000,	-0.200000000,	0,	0.200000000,	0.250000000,	0.230769231,	0.200000000,	0.172413793,	0.150000000,
+                               -0.162162162,	-0.192307692,	-0.235294118,	-0.300000000,	-0.400000000,	-0.500000000,	0,	0.500000000,	0.400000000,	0.300000000,	0.235294118,	0.192307692,	0.162162162,
+                               -0.166666667,	-0.200000000,	-0.250000000,	-0.333333333,	-0.500000000,	-1.000000000,	0,	1.000000000,  0.500000000,	0.333333333,	0.250000000,	0.200000000,	0.166666667,
+                               -0.162162162,	-0.192307692,	-0.235294118,	-0.300000000,	-0.400000000,	-0.500000000,	0,	0.500000000,	0.400000000,	0.300000000,	0.235294118,	0.192307692,	0.162162162,
+                               -0.150000000,	-0.172413793,	-0.200000000,	-0.230769231,	-0.250000000,	-0.200000000,	0,	0.200000000,	0.250000000,	0.230769231,	0.200000000,	0.172413793,	0.150000000,
+                               -0.133333333,	-0.147058824,	-0.160000000,	-0.166666667,	-0.153846154,	-0.100000000,	0,	0.100000000,	0.153846154,	0.166666667,	0.160000000,	0.147058824,	0.133333333,
+                               -0.115384615,	-0.121951220,	-0.125000000,	-0.120000000,	-0.100000000,	-0.058823529,	0,	0.058823529,	0.100000000,	0.120000000,	0.125000000,	0.121951220,	0.115384615,
+                               -0.098360656,	-0.100000000,	-0.097560976,	-0.088235294,	-0.068965517,	-0.038461538,	0,	0.038461538,	0.068965517,	0.088235294,	0.097560976,	0.100000000,	0.098360656,
+                               -0.083333333,	-0.081967213,	-0.076923077,	-0.066666667,	-0.050000000,	-0.027027027,	0,	0.027027027,	0.050000000,	0.066666667,	0.076923077,	0.081967213,	0.083333333
+),nrow=13,ncol=13)
+
+
+boamatrix_y=matrix(c(-0.083333333,	-0.098360656,	-0.115384615,	-0.133333333,	-0.150000000,	-0.162162162,	-0.166666667,	-0.162162162,	-0.150000000,	-0.133333333,	-0.115384615,	-0.098360656,	-0.083333333,
+                               -0.081967213,	-0.100000000,	-0.121951220,	-0.147058824,	-0.172413793,	-0.192307692,	-0.200000000,	-0.192307692,	-0.172413793,	-0.147058824,	-0.121951220,	-0.100000000,	-0.081967213,
+                               -0.076923077,	-0.097560976,	-0.125000000,	-0.160000000,	-0.200000000,	-0.235294118,	-0.250000000,	-0.235294118,	-0.200000000,	-0.160000000,	-0.125000000,	-0.097560976,	-0.076923077,
+                               -0.066666667,	-0.088235294,	-0.120000000,	-0.166666667,	-0.230769231,	-0.300000000,	-0.333333333,	-0.300000000,	-0.230769231,	-0.166666667,	-0.120000000,	-0.088235294,	-0.066666667,
+                               -0.050000000,	-0.068965517,	-0.100000000,	-0.153846154,	-0.250000000,	-0.400000000,	-0.500000000,	-0.400000000,	-0.250000000,	-0.153846154,	-0.100000000,	-0.068965517,	-0.050000000,
+                               -0.027027027,	-0.038461538,	-0.058823529,	-0.100000000,	-0.200000000,	-0.500000000,	-1.000000000,	-0.500000000,	-0.200000000,	-0.100000000,	-0.058823529,	-0.038461538,	-0.027027027,
+                               0,	0,		0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,
+                               0.027027027,	0.038461538,	0.058823529,	0.100000000,	0.200000000,	0.500000000,	1.000000000,	0.500000000,	0.200000000,	0.100000000,	0.058823529,	0.038461538,	0.027027027,
+                               0.050000000,	0.068965517,	0.100000000,	0.153846154,	0.250000000,	0.400000000,	0.500000000,	0.400000000,	0.250000000,	0.153846154,	0.100000000,	0.068965517,	0.050000000,
+                               0.066666667,	0.088235294,	0.120000000,	0.166666667,	0.230769231,	0.300000000,	0.333333333,	0.300000000,	0.230769231,	0.166666667,	0.120000000,	0.088235294,	0.066666667,
+                               0.076923077,	0.097560976,	0.125000000,	0.160000000,	0.200000000,	0.235294118,	0.250000000,	0.235294118,	0.200000000,	0.160000000,	0.125000000,	0.097560976,	0.076923077,
+                               0.081967213,	0.100000000,	0.121951220,	0.147058824,	0.172413793,	0.192307692,	0.200000000,	0.192307692,	0.172413793,	0.147058824,	0.121951220,	0.100000000,	0.081967213,
+                               0.083333333,	0.098360656,	0.115384615,	0.133333333,	0.150000000,	0.162162162,	0.166666667,	0.162162162,	0.150000000,	0.133333333,	0.115384615,	0.098360656,	0.083333333
+      ),nrow=13,ncol=13)
+
+
+
+
+
+
+i=1
+
+
+for (i in 1:length(tdates))  {
+      
+         
+      myfecha=tdates[i]; myfecha
+   print(paste(i," ",myfecha,sep="")); Sys.sleep(0.01);flush.console()
+      
+      ###To avoid 31st June error.......................................quitado
+      outncname=paste(outpath,myfecha,"_BOA_BLUEFIN.nc",sep="")
+      #if(outncname==paste(outpath,year,"06","31","_BOA_BLUEFIN.nc",sep="")){u=u+1}else{u=u}
+
+      ###check if file already exists
+      # if(file.exists(outncname)=="FALSE"){
+  if(file.exists(outncname)=="TRUE"){print(paste(myfecha," ya existe",sep=""))} else{     
+      ###Open nc file
+      nc=open.nc(paste(ipath,dataset,myfecha,productname,sep=""),readunlimi=FALSE)
+      
+      ###Get variables from file
+      lat = var.get.nc( nc, "latitude");head(lat)          
+      lon = var.get.nc( nc, "longitude");head(lon)          
+      chla = var.get.nc( nc,"wchla");head(chla)
+      
+      ###Create a 2D matrix
+      m2 <- t(chla)[1:nrow(t(chla)),]
+      
+      ###Create a raster object with the matrix and give it the projection information
+      rmed <- raster(m2, xmn=min(lon), xmx=max(lon), ymn=min(lat),ymx=max(lat),crs="+proj=longlat +datum=WGS84")
+ #plot(rmed)
+      ###Define area     
+      xmax=17.5
+      xmin=-6
+      ymax=46
+      ymin=30
+      
+      #e <- extent(xmin, xmax,ymin,ymax)
+      #r0 <- crop(rmed, e)
+r0=rmed  
+
+      logr=log10(r0)
+	#plot(logr)
+     
+      ###BOA Algorithm: filters are defined as 1 if filtered image is the same as original image and 
+      ###               0 if not and should be replaced by the median filter
+      
+      ###compute mask filter 5: keep orifginal values if they are a peak of the 4 possible directions 
+      ###                       (5x5 matrix)
+      m5=matrix(c(1,NA,1,NA,1,NA,1,1,1,NA,1,1,NA,1,1,NA,1,1,1,NA,1,NA,1,NA,1),nrow=5,ncol=5)
+      i51=focal(r0,w=m5,fun=myfunmax,pad=F)
+      i52=focal(r0,w=m5,fun=myfunmin,pad=F)
+      s1 <- stack(r0, i51, i52)
+      mask5=overlay(s1, fun =function(x,y,z) {ifelse( x>y |x<z, 1, 0)} )# identify peaks
+
+      ###compute mask filter 3: keep original values if they are NOT a peak of the 2 directions  
+      ###                       N-S & W-E (3x3 matrix)
+      m3=matrix(c(NA,1,NA,1,NA,1,NA,1,NA),nrow=3,ncol=3)
+      i31=focal(r0,w=m3,fun=myfunmax,pad=F)
+      i32=focal(r0,w=m3,fun=myfunmin,pad=F)
+      s2 <- stack(r0, i31, i32)
+      mask3=overlay(s2, fun =function(x,y,z) {ifelse( x>y |x<z, 0, 1)} )# identify peaks
+
+      ###compute mask filter 3: keep original values if they are within the limits of the 3x3 window
+      ###                       values
+      m3median=matrix(c(1,1,1,1,NA,1,1,1,1),nrow=3,ncol=3)
+      i31median=focal(r0,w=m3median,fun=myfunmedian,pad=F)
+
+      ###compute output filtered image
+      s3 <- stack(r0,mask5,mask3,i31median)
+      rf1=overlay(s3,fun=function(x,y,z,w){ifelse(y==1|z==1,x,w)})
+
+      ###First median 3x3 filter
+      rf2=focal(rf1,w=matrix(c(1,1,1,1,1,1,1,1,1),nrow=3,ncol=3),fun=myfunmedian,pad=F)
+      
+      ###compute gradient as 13x13 Sobel matrix
+      trf1=log(rf2)
+      Gx=focal(trf1,w=boamatrix_x,fun=sum,pad=F,na.rm=F)
+      Gy=focal(trf1,w=boamatrix_y,fun=sum,pad=F,na.rm=F)
+      GM=sqrt(Gx^2+Gy^2)
+      GD=atan(Gy/Gx)
+
+      ###Second median 3x3 filter
+      rf3=focal(GM,w=matrix(c(1,1,1,1,1,1,1,1,1),nrow=3,ncol=3),fun=myfunmedian,pad=F)
+      
+      ###filter low values by the 33% quantile
+      GMcut=rf3
+      GMq33=quantile(values(rf3),c(.33),na.rm=T)
+      GMcut[GMcut<(GMq33)]=GMq33
+
+      ###Plot and save
+      tranGM=log(GMcut)
+      png(paste(outpath,myfecha,"_BOA_BLUEFIN.png",sep=""), height=10,width=11,units = "cm",
+          res=600)
+     
+      ntics=5
+      r2.range=c(minValue(tranGM), maxValue(tranGM))
+      labelplaces=seq(r2.range[1], r2.range[2],length.out=ntics)
+      labelplaces[1]=labelplaces[1]+0.1
+      labelplaces[ntics]=labelplaces[ntics]-0.1
+      labelvals <- round(2.718^labelplaces,digits=3)
+      labelvals[ntics]=round(labelvals[ntics]-(labelvals[ntics]*0.001),digits=3)
+      plot(tranGM,main=paste(myfecha,"_BOA_BLUEFIN.png",sep=""), legend=TRUE, col=tim.colors(64),
+           legend.width=1, legend.shrink=0.75, axis.args=list(at=labelplaces, labels=labelvals, 
+           cex.axis=1),legend.args=list(text='', side=4, font=2, line=2.5, cex=0.8))
+      plot(coastline,col="gray",add=TRUE)
+      dev.off()
+      
+      ###Save raster as nc file
+      writeRaster(tranGM, filename=outncname,varname="B_B_chla",NAflag=-1000,longname="BOA_BLUEFIN_chla" ,format="CDF")##############  revisar error al guardar nc no reconoce la proeyccion
+print(paste(i," ",myfecha," procesado",sep=""));Sys.sleep(0.01);flush.console()  
+}
+}
+}
+
+                      
+  
+                           
+
+stopCluster(cl)
+
+
+
+
+
+
+
+
+
+
+
+
+
